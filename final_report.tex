@@ -1,0 +1,140 @@
+\documentclass{article}
+
+%%% PACKAGES %%%
+\usepackage[a4paper, margin=0.75in]{geometry}
+\usepackage{setspace}
+\usepackage{authblk}
+\usepackage{graphicx}
+\usepackage{blindtext}
+\usepackage{multicol}
+\usepackage{caption}
+\usepackage{titlesec}
+\usepackage{svg}
+\usepackage{enumitem}
+
+%%% CONFIG %%%
+\renewcommand{\thesection}{\Alph{section}}
+\renewcommand{\thesubsection}{\arabic{subsection}}
+\titleformat{\section}{\centering\large\bfseries}{Part \thesection}{0em}{}{}
+\titleformat{\subsection}{\bfseries}{\thesubsection.}{0.5em}{}{}
+\newenvironment{mcfigure}
+    {\par\noindent\minipage{\linewidth}}
+    {\endminipage\par}
+\setlist[enumerate]{
+    label=(\alph*),
+    wide=0pt,
+}
+\setlength{\abovecaptionskip}{5pt}
+\setlength{\belowcaptionskip}{0pt}
+
+%%% TITLE METADATA %%%
+\title{CSC311 Final Report: Project Option 1}
+\author[]{Leo Peckham}
+\author[]{Longyue Wang}
+\author[]{Gursewak Sandhu}
+\affil[]{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{multicols}{2}
+
+\section{}
+
+\subsection{$k$-nearest neighbours}
+
+\begin{enumerate}
+
+\item
+~
+\vspace{-0.2cm}
+\begin{mcfigure}
+    \centering
+    \includesvg[width=\linewidth]{A1a}
+    {\footnotesize
+        \setlength{\tabcolsep}{3pt}
+        \begin{tabular}{ |c|c|c|c|c|c|c| } 
+            \hline
+            \textbf{$k$-value} & 1 & 6 & {\bf 11} & 16 & 21 & 26 \\ 
+            \textbf{Accuracy} & 0.628 & 0.677 & {\bf 0.689}
+                              & 0.675 & 0.668 & 0.651 \\ 
+            \hline
+        \end{tabular}
+    }
+    \captionof{figure}{Accuracies of user-clustering {\sc knn}}
+    \label{fig:userclustering}
+\end{mcfigure}
+
+
+\item
+From this data, we can see that the $k^*$ that gave us the best validation
+accuracy was $k^* = 11$. Running on test we achieve an accuracy of $0.683$.
+
+\item
+Question-based clustering assumes that if two questions have very similar
+distributions of answers across the known students, then the questions will
+behave similarly for new students. Intuitively, if two questions ask about a
+specific theorem, then the same students who get the first one wrong because
+they forgot the statement of the theorem will get the second wrong as well.
+
+\begin{mcfigure}
+    \centering
+    \includesvg[width=\linewidth]{A1c}
+    {\footnotesize
+        \setlength{\tabcolsep}{3pt}
+        \begin{tabular}{ |c|c|c|c|c|c|c| } 
+            \hline
+            \textbf{$k$-value} & 1 & 6 & 11 & 16 & {\bf 21} & 26 \\ 
+            \textbf{Accuracy} & 0.618 & 0.660 & 0.680
+                              & 0.687 & {\bf 0.690} & 0.689 \\ 
+            \hline
+        \end{tabular}
+    }
+    \captionof{figure}{Accuracies of question-clustering KNN}
+    \label{fig:questionclustering}
+\end{mcfigure}
+
+From this data, we can see that the $k^*$ that gave us the best validation
+accuracy was $k^* = 21$. Running on test we achieve an accuracy of $0.670$.
+
+\item
+The performances across the board are similar. The user-based approach does
+better on test, but only by around a tenth of a percent accuracy. The graphs
+for different $k$-values do look quite different, though, with the
+user-clustering in figure \ref{fig:userclustering} falling off much faster for
+high $k$-values than the question-clustering in figure
+\ref{fig:questionclustering} .
+
+\item
+
+This method relies on a sufficient amount of data to be able to accurately
+cluster. If there is an example with a significant amount held-out, it will
+become inaccurate because many nearby users/questions will look similar.
+
+The dimension of the features is also a problem. First, it can be extremely
+high, being either the number of students or the number of questions. This
+poses a problem for a {\sc knn} approach, especially one that uses a Euclidean
+distance like this one. Mapping to a smaller latent space first and using
+another distance function would help alieviate this problem. Second, if we add
+new students or questions to the dataset, the very {\it dimensionality} of our
+data will change. This makes it more difficult to improve our model with new
+data; mapping to a laten space would also fix this issue.
+
+\end{enumerate}
+
+\subsection{Item response theory}
+\blindtext
+
+\subsection{Matrix factorization}
+\blindtext
+
+\subsection{Ensemble}
+\blindtext
+
+\section{}
+
+\blindtext
+
+\end{multicols}
+\end{document}
