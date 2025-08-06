@@ -5,7 +5,7 @@ from utils import (
     load_train_sparse,
 )
 import numpy as np
-
+import matplotlib as plt
 
 def sigmoid(x):
     """Apply sigmoid function."""
@@ -28,6 +28,15 @@ def neg_log_likelihood(data, theta, beta):
     # Implement the function as described in the docstring.             #
     #####################################################################
     log_lklihood = 0.0
+
+    for iteration in range(len(data["is_correct"])):
+        i = data["user_id"][iteration]
+        j = data["question_id"][iteration]
+        c_ij = data["is_correct"][iteration] # c_ij
+        # log p = (c_ij)log(sigmoid(theta_i - beta_j)) + (1 - c_ij)(log(1 - sigmoid(theta_i - beta_j)))
+        log_lklihood += c_ij * np.log(sigmoid(theta[i] - beta[j])) + (1 - c_ij) * np.log(1 - sigmoid(theta[i] - beta[j]))
+
+
     #####################################################################
     #                       END OF YOUR CODE                            #
     #####################################################################
@@ -55,6 +64,26 @@ def update_theta_beta(data, lr, theta, beta):
     # TODO:                                                             #
     # Implement the function as described in the docstring.             #
     #####################################################################
+    # We don't need to consider the number of iteration since that will be done in IRT
+    # Simply need to iterate through the size of the data (len of the lists)
+    # And perform new_theta += 
+
+    for iteration in range(len(data["is_correct"])):
+        i = data["user_id"][iteration]
+        j = data["question_id"][iteration]
+        c_ij = data["is_correct"][iteration] # c_ij
+        update = lr * (c_ij - sigmoid(theta[i] - beta[j]))
+        theta[i] += update
+
+    # need to do seperately so beta only uses the updated theta value
+    for iteration in range(len(data["is_correct"])):
+        i = data["user_id"][iteration]
+        j = data["question_id"][iteration]
+        c_ij = data["is_correct"][iteration] # c_ij
+        update = lr * (sigmoid(theta[i] - beta[j]) - c_ij)
+        beta[j] += update
+
+    return theta, beta
     pass
     #####################################################################
     #                       END OF YOUR CODE                            #
@@ -76,20 +105,28 @@ def irt(data, val_data, lr, iterations):
     :return: (theta, beta, val_acc_lst)
     """
     # TODO: Initialize theta and beta.
-    theta = None
-    beta = None
+    theta = np.zeros(542) # 542 students listed in student metadata 
+    beta = np.zeros(1774) # 1774 questions listed in question meta
 
     val_acc_lst = []
+    train_lld = []
+    val_lld = []
 
     for i in range(iterations):
         neg_lld = neg_log_likelihood(data, theta=theta, beta=beta)
+        neg_lld_val = neg_log_likelihood(val_data, theta=theta, beta=beta)
         score = evaluate(data=val_data, theta=theta, beta=beta)
+
+        # needed fopr (b)
+        train_lld.append(neg_lld)
+        val_lld.append(neg_lld_val)
+
         val_acc_lst.append(score)
         print("NLLK: {} \t Score: {}".format(neg_lld, score))
         theta, beta = update_theta_beta(data, lr, theta, beta)
 
     # TODO: You may change the return values to achieve what you want.
-    return theta, beta, val_acc_lst
+    return theta, beta, val_acc_lst, train_lld, val_lld
 
 
 def evaluate(data, theta, beta):
@@ -122,6 +159,24 @@ def main():
     # Tune learning rate and number of iterations. With the implemented #
     # code, report the validation and test accuracy.                    #
     #####################################################################
+    lr = 0.01
+    iterations = 1000 
+
+    print(f"Hyperparameter: Larning Rate = {lr}, Iterations = {iterations}")
+    
+    theta, beta, val_acc_lst, train_lld, val_lld = irt(train_data, val_data, lr, iterations)
+
+    val_acc = evaluate(val_data, theta, beta)
+    print(f"validation accuracy: {val_acc}")
+    test_acc = evaluate(test_data, theta, beta)
+    print(f"test accuracy: {test_acc}")
+
+    # validation accuracy: 0.7071690657634773
+    # test accuracy: 0.707310189105278
+
+    # Need to work on Plots for (b) and (d
+
+
     pass
     #####################################################################
     #                       END OF YOUR CODE                            #
