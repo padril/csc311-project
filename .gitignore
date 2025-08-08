@@ -1,0 +1,10 @@
+svg-inkscape/
+__pycache__/
+*.out
+*~
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.synctex.gz
+

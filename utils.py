@@ -42,6 +42,34 @@ def load_train_sparse(root_dir="./data"):
     matrix = load_npz(path)
     return matrix
 
+def load_question_metadata(root_dir="./data"):
+    """Load the question metadata as a dictionary.
+
+    :param root_dir: str
+    :return: A dictionary {question_id: list, subject_ids: list of lists}
+    """
+    path = os.path.join(root_dir, "question_meta.csv")
+    if not os.path.exists(path):
+        raise Exception(
+            "The specified path {} " "does not exist.".format(os.path.abspath(path))
+        )
+    # Initialize the data.
+    data = {"question_id": [], "subject_id": []}
+    # Iterate over the row to fill in the data.
+    with open(path, "r") as csv_file:
+        reader = csv.reader(csv_file)
+        for row in reader:
+            try:
+                data["question_id"].append(int(row[0]))
+                data["subject_id"].append([int(n) for n in row[1].strip("[]").split(", ")])
+            except ValueError:
+                # Pass first row.
+                pass
+            except IndexError:
+                # is_correct might not be available.
+                pass
+    return data
+
 
 def load_train_csv(root_dir="./data"):
     """Load the training data as a dictionary.
