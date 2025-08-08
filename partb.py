@@ -1,9 +1,9 @@
 import numpy as np
-from sklearn.impute import KNNImputer
 from scipy.linalg import sqrtm
 import matplotlib.pyplot as plt
 from utils import (
     load_valid_csv,
+    load_train_csv,
     load_public_test_csv,
     load_question_metadata,
     load_train_sparse,
@@ -14,11 +14,12 @@ from tqdm import tqdm
 
 
 # 388 originally
-K_VALUES = [40,80,120,160]
-ITS = 2000
+K_VALUE = 320
+ITS = 10000
 
 LR = 1e-3
-LR_a = 5e-4
+LR_a = 1e-4
+VAR = 2
 
 def onehot(Q):
     """
@@ -98,8 +99,8 @@ def train_irt(H, S, L, val):
     """
     _, k = L.shape
     np.random.seed(42)
-    Wth = np.random.randn(k, k) * 0.1
-    Wb = np.random.randn(k, k) * 0.1
+    Wth = np.random.randn(k, k) * VAR
+    Wb = np.random.randn(k, k) * VAR
     a = 5
     b = 0
 
@@ -117,8 +118,12 @@ def train_irt(H, S, L, val):
     adam_t = 0
     b1, b2 = 0.9, 0.999
 
+    scores = []
+    nllds = []
+    iterations = []
+
     mask = ~np.isnan(H)
-    for i in tqdm(range(ITS)):
+    for i in tqdm(range(ITS + 1)):
         theta = S @ Wth
         beta = L @ Wb
         abstheta = np.linalg.norm(theta, axis=1, keepdims=True) + 1e-12
@@ -131,10 +136,11 @@ def train_irt(H, S, L, val):
         lld[mask] = H[mask] * np.log(g[mask]) + (1 - H[mask]) * np.log(1 - g[mask])
         nlld = -lld.sum()
 
-        if i % (ITS // 10) == 0:
+        if i % (ITS // 50) == 0:
             score = evaluate_irt(val, theta, beta)
-            print(f"({i}) NLLD: {nlld}\tScore: {score}\na: {a}\tb: {b}")
-            print(f"g: {g.min()}, {g.mean()}, {g.max()}")
+            nllds.append(nlld)
+            scores.append(score)
+            iterations.append(i)
         
         D = np.zeros_like(H)
         D[mask] = g[mask] - H[mask]
@@ -146,7 +152,7 @@ def train_irt(H, S, L, val):
                      / (absbeta * absbeta)) * beta)
         grad_Wth = S.T @ grad_th
         grad_Wb = L.T @ grad_bt
-        grad_a = (D * cs)[mask].sum()     # equivalently: np.sum(D * cs)
+        grad_a = (D * cs)[mask].sum()
         grad_b  = D[mask].sum()
 
         adam_t += 1
@@ -156,6 +162,8 @@ def train_irt(H, S, L, val):
         lr_b = LR
         if i <= 0.05 * ITS:
             lr *= 5
+        elif i >= 0.7 * ITS:
+            lr *= 0.5
 
         adam_m_Wth = b1 * adam_m_Wth + (1 - b1) * grad_Wth
         adam_v_Wth = b2 * adam_v_Wth + (1 - b2) * (grad_Wth ** 2)
@@ -181,6 +189,11 @@ def train_irt(H, S, L, val):
         v_hat = adam_v_b / (1 - b2 ** adam_t)
         b -= lr_b * m_hat / (np.sqrt(v_hat) + 1e-12)
 
+    with open("partb_training.csv", "w") as f:
+        print("i,nlld,score", file=f)
+        for i,nlld,score in zip(iterations,nllds,scores):
+            print(f"{i},{nlld:.4f},{score:.4f}", file=f)
+
     return Wth, Wb, a, b
 
 
@@ -197,39 +210,29 @@ def decode(S, L, Wth, Wb, a, b, ref):
     return hyp
         
 
-
-
-def get_acc(H, Q1, k, ref):
-    L = train_svd(Q1, k)
-    S = compute_aptitude(H, L)
-    Wth, Wb, a, b = train_irt(H, S, L, ref)
-    hyp = decode(S, L, Wth, Wb, a, b, ref)
-    return evaluate(ref, hyp)
-
-
 def main():
     H = load_train_sparse("./data").toarray()
     Q = load_question_metadata("./data")
     Q1 = onehot(Q)
+    train = load_train_csv("./data")
     val = load_valid_csv("./data")
     test = load_public_test_csv("./data")
 
-    accs = []
-    kstar, accstar = np.nan, 0
-    for k in K_VALUES:
-        acc = get_acc(H, Q1, k, val)
-        accs.append(acc)
-        if acc >= accstar:
-            kstar, accstar = k, acc
-        print("k: {} \t Acc: {}".format(k, acc))
+    L = train_svd(Q1, K_VALUE)
+    S = compute_aptitude(H, L)
+    Wth, Wb, a, b = train_irt(H, S, L, val)
 
-    plt.plot(K_VALUES, accs)
-    plt.xlabel("$k$-values")
-    plt.ylabel("Accuracy")
-    plt.savefig("partb_k_search.svg")
+    train_hyp = decode(S, L, Wth, Wb, a, b, train)
+    train_acc = evaluate(train, train_hyp)
+    print(f"Train acc:\t{train_acc:.4f}")
 
-    # testacc = get_acc(H, Q1, kstar, test)
-    # print(f"k*:\t{kstar}\nTest acc:\t{testacc:.4f}")
+    val_hyp = decode(S, L, Wth, Wb, a, b, val)
+    val_acc = evaluate(val, val_hyp)
+    print(f"Val acc:\t{val_acc:.4f}")
+
+    test_hyp = decode(S, L, Wth, Wb, a, b, test)
+    test_acc = evaluate(test, test_hyp)
+    print(f"Test acc:\t{test_acc:.4f}")
 
 
 if __name__ == "__main__":
