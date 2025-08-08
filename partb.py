@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.linalg import sqrtm
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from utils import (
     load_valid_csv,
     load_train_csv,
@@ -122,10 +122,19 @@ def train_irt(H, S, L, val):
     nllds = []
     iterations = []
 
+    best_Wth, best_Wb, best_a, best_b, best_score = None, None, None, None, 0
+
     mask = ~np.isnan(H)
     for i in tqdm(range(ITS + 1)):
         theta = S @ Wth
         beta = L @ Wb
+
+        p = 0.3
+        dropout = (np.random.rand(*theta.shape) > p) / (1-p)
+        theta = theta * dropout
+        dropout = (np.random.rand(*beta.shape) > p) / (1-p)
+        beta = beta * dropout
+
         abstheta = np.linalg.norm(theta, axis=1, keepdims=True) + 1e-12
         absbeta = np.linalg.norm(beta, axis=1, keepdims=True) + 1e-12
         cs = (theta @ beta.T) / (abstheta @ absbeta.T)
@@ -141,7 +150,11 @@ def train_irt(H, S, L, val):
             nllds.append(nlld)
             scores.append(score)
             iterations.append(i)
-        
+            if score > best_score:
+                best_Wth, best_Wb = Wth, Wb
+                best_a, best_b = a, b
+                best_score = score
+                    
         D = np.zeros_like(H)
         D[mask] = g[mask] - H[mask]
         grad_th = (((D @ (beta / absbeta)) / abstheta)
@@ -194,7 +207,7 @@ def train_irt(H, S, L, val):
         for i,nlld,score in zip(iterations,nllds,scores):
             print(f"{i},{nlld:.4f},{score:.4f}", file=f)
 
-    return Wth, Wb, a, b
+    return best_Wth, best_Wb, best_a, best_b
 
 
 def decode(S, L, Wth, Wb, a, b, ref):
