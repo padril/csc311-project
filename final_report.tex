@@ -124,7 +124,52 @@ data; mapping to a laten space would also fix this issue.
 \end{enumerate}
 
 \subsection{Item response theory}
-\blindtext
+\item 
+(a) 
+\[
+p(c_{ij} = 1 \mid \theta_i, \beta_j)
+= \sigma(\theta_i - \beta_j)
+= \frac{\exp(\theta_i - \beta_j)}{1 + \exp(\theta_i - \beta_j)}
+\]
+
+\[
+\log p(C \mid \theta, \beta)
+= \sum_{i,j} \left[ c_{ij} \log \sigma(\theta_i - \beta_j)
++ (1 - c_{ij}) \log (1 - \sigma(\theta_i - \beta_j)) \right]
+\]
+
+Derivative w.r.t. \(\theta_i\):
+\[
+\frac{\partial \log p(C \mid \theta, \beta)}{\partial \theta_i}
+= \sum_j \left[ c_{ij} - \sigma(\theta_i - \beta_j) \right]
+\]
+
+Derivative w.r.t. \(\beta_j\):
+\[
+\frac{\partial \log p(C \mid \theta, \beta)}{\partial \beta_j}
+= \sum_i \left[ \sigma(\theta_i - \beta_j) - c_{ij} \right]
+\]
+
+
+\item 
+(b) After some experimenting we found that the best results occured with our Learning rate
+set to 0.01 and the number of iterations set to 200. Two hundred was found to be sufficient
+as both the curves can be seen plateauing, and our 1000 iterations test found no significant changes.
+\includesvg{A2b-2}
+
+\item 
+(c) After running the IRT model with a learning rate of 0.01 and 200 iterations we got the following.
+Our IRT model scored a validation accuracy of 0.707, and a test accuracy of 0.708
+
+\item 
+(d) We selected 3 questions and put them against our trained model. 
+\includesvg{A2d}
+From our graph, the x-axis represents $\theta$, which is the ability of the student, and the y-axis represents the predicted probability that a student answers the questions correctly. The plot makes use of scatter plot points to mark each individual students.
+
+Each curve has a S shape of the logistic function that is used in our IRT model. The S shape occurs because students with abilities(theta) much lower than the difficulty of the question have probabilites near 0 while, students with greater ability have probabilities closer to 1. And the transition phase of these points can be seen when the students ability matches with the difficulty of our questions. 
+
+In the 3 curves we have plotted, you may notice that curves may be to the left or right of each other. The curves positioning is determined by the difficulty of the question. In our graph the orange curve occurs to the right of the blue and green curves, which means the orange question would require a greater student ability to get correct compared to the blue and green curves. 
+
 
 \subsection{Matrix factorization}
 
@@ -176,7 +221,15 @@ The chosen hyperparameters are 0.01 for the learning rate, and 4500 iterations. 
 \end{enumerate}
 
 \subsection{Ensemble}
-\blindtext
+\item
+We implemented the bagging ensemble using the following models: 2 IRT models with varying hyper parameters and a Matrix Factorization model. Each model was trained on a bootstrap of the training data, with 3 samples being generated with replacement. To determine our prediction each model produced a binary prediction of 0 or 1 to determine if the student got the question correct.  These sets of predictions were then summed up to enable a vote of whether the student got the question correctly. If 2 models said the student did then the ensemble model predicted the student got the question correct. 
+
+From running our tests the following accuracies were obtained: Validation was 0.699 and Test was 0.695. This was actually slight lower than the best version of IRT we found which had Validation as 0.707 and Test as 0.708.
+Which means it slightly underperformed in comparison. 
+
+The reasons for the lower performance could be the selection of models. Both the IRT’s were very similar even-though they had differing hyperparameters, which could lead to them having similar points of error. Additionally the method used top determine the vote may have been flawed with an average of the predicted probabilities possibly resulting in better results than the voted probabilty. Finally, the addition of the Matrix Factorization although beneficial for allowing for the recognition of more student patterns and having more diversity in the models, had a lower accuracy than the base IRT model which could have pulled down the accuracy of the ensemble. 
+
+
 
 \section{}
 
@@ -371,6 +424,21 @@ final train accuracy of 72.0\%, valid accuracy of 66.9\%, and test accuracy of
 
 \subsection{Comparison}
 
+\item
+
+\begin{mcfigure}
+    \begin{tabular}{lllll}
+                            & Original IRT & Modified IRT \\
+        Validation Accuracy & 0.707 & 0.669\\
+        Test Accuracy & 0.708 & 0.666\\
+        & &  &  
+    \end{tabular}
+\end{mcfigure}
+
+After comparing the base IRT model to our Extended version we found that the extend verision slightly underperfomed in comparison.
+
+This could be due to many factors such as the complexity of this IRT mdoel in comparison to the base one, as we tried to take into account student ability more independentally across the data rather than having the student ability be set. 
+
 \subsection{Limitations}
 
 One situation in which we would expect our modification to perform poorly is in situations where the data is particularly sparse, that is to say, where most of the data is missing. 
@@ -382,8 +450,9 @@ One way that we could potentially address this is an extension to extrapolate fr
 \section{}
 
 \subsection{Contributions}
-Leo: \\
+Leo: Part A Q1, Part 2 Q1 \& 2\\
 Longyue: Part A Q3, Part B Q3 \& 4\\
 Gursewak: Part A Q2 \&4, Part B Q3\\
+All group members completed course evaluations
 
 \end{document}

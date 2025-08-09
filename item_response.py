@@ -117,7 +117,7 @@ def irt(data, val_data, lr, iterations):
         neg_lld_val = neg_log_likelihood(val_data, theta=theta, beta=beta)
         score = evaluate(data=val_data, theta=theta, beta=beta)
 
-        # lld's needed fopr (b)
+        # lld's needed for (b)
         # Divided in order to normalize the log-likelihood
         # Stated in a piazza post. 
 
