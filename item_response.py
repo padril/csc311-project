@@ -5,7 +5,7 @@ from utils import (
     load_train_sparse,
 )
 import numpy as np
-import matplotlib as plt
+import matplotlib.pyplot as plt
 
 def sigmoid(x):
     """Apply sigmoid function."""
@@ -117,9 +117,14 @@ def irt(data, val_data, lr, iterations):
         neg_lld_val = neg_log_likelihood(val_data, theta=theta, beta=beta)
         score = evaluate(data=val_data, theta=theta, beta=beta)
 
-        # needed fopr (b)
-        train_lld.append(neg_lld)
-        val_lld.append(neg_lld_val)
+        # lld's needed fopr (b)
+        # Divided in order to normalize the log-likelihood
+        # Stated in a piazza post. 
+
+        normalized_neg_lld = neg_lld / 56688 
+        normalized_val_neg_lld = neg_lld_val / 7086
+        train_lld.append(normalized_neg_lld)
+        val_lld.append(normalized_val_neg_lld)
 
         val_acc_lst.append(score)
         print("NLLK: {} \t Score: {}".format(neg_lld, score))
@@ -147,6 +152,8 @@ def evaluate(data, theta, beta):
     return np.sum((data["is_correct"] == np.array(pred))) / len(data["is_correct"])
 
 
+
+
 def main():
     train_data = load_train_csv("./data")
     # You may optionally use the sparse matrix.
@@ -159,8 +166,8 @@ def main():
     # Tune learning rate and number of iterations. With the implemented #
     # code, report the validation and test accuracy.                    #
     #####################################################################
-    lr = 0.01
-    iterations = 1000 
+    lr = 0.01   # Use 0.01
+    iterations = 200    # Use 200. as it plateaus there anyways
 
     print(f"Hyperparameter: Larning Rate = {lr}, Iterations = {iterations}")
     
@@ -171,11 +178,20 @@ def main():
     test_acc = evaluate(test_data, theta, beta)
     print(f"test accuracy: {test_acc}")
 
-    # validation accuracy: 0.7071690657634773
-    # test accuracy: 0.707310189105278
+    
+    # validation accuracy: 0.7070279424216765
+    # test accuracy: 0.7084391758396839
 
-    # Need to work on Plots for (b) and (d
-
+    # Need to work on Plots for (b) and (d)
+    # Need to normalize or average the Neg _lld
+    plt.figure()
+    #plt.plot(train_lld, label="Training Loss")
+    #plt.plot(val_lld, label="Validation Loss")
+    #plt.legend()
+    #plt.xlabel("Iterations")
+    #plt.ylabel("Log-likelihood")
+    #plt.show()
+    #plt.savefig("A2b-2.svg")
 
     pass
     #####################################################################
@@ -185,7 +201,30 @@ def main():
     #####################################################################
     # TODO:                                                             #
     # Implement part (d)                                                #
-    #####################################################################
+    ####################################################################
+   
+    # Select 3 questions from beta. 
+    
+    question1 = beta[0]
+    question2 = beta[len(beta)//2]
+    question3 = beta[len(beta)-1]
+
+    #plt.plot(theta, sigmoid(theta - question1), label="j1")
+    #plt.plot(theta, sigmoid(theta - question2), label="j2")
+    #plt.plot(theta, sigmoid(theta - question3), label="j3")
+    # Can see the shape of the curve, but its very messy and illegible since the curve goes back and forth to the last point.
+    # Trying scatterplot to see if its cleaner.
+
+    plt.scatter(theta, sigmoid(theta - question1), label="j1")
+    plt.scatter(theta, sigmoid(theta - question2), label="j2")
+    plt.scatter(theta, sigmoid(theta - question3), label="j3")
+    plt.xlabel("theta")
+    plt.ylabel("P(c_ij) = 1")
+    #plt.show()
+    plt.savefig("A2d.svg")
+    # 1 of the lines is not quite visible. The blue one just barely peaks out behind the green one
+    
+
     pass
     #####################################################################
     #                       END OF YOUR CODE                            #
