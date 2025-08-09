@@ -267,11 +267,12 @@ similarity between $k$ dimensional vectors, similar to the treatment of IRT.
 
 
 Where $\lVert\cdot\rVert_2$ is the $L^2$ norm, and $\sigma$ is the sigmoid
-activation function. For the last line, a similar result holds exchanging
-$\theta_i$ for $\beta_j$. $a$ and $b$ are parameters the model trains along
-with $\mathbf{W}_\theta$ and $\mathbf{W}_\beta$ to prevent the sigmoid from
-getting clustered too heavily around 0.5, since the cosine similarity outputs
-small values.
+activation function. For the last line, we use the well known derivatives of
+the negative log-likelihood and the cosine similarity, and a similar result
+holds exchanging $\theta_i$ for $\beta_j$. $a$ and $b$ are parameters the model
+trains along with $\mathbf{W}_\theta$ and $\mathbf{W}_\beta$ to prevent the
+sigmoid from getting clustered too heavily around 0.5, since the cosine
+similarity outputs small values.
 
 We run gradient descent for 10,000 steps, using a learning rate of $1e^{-3}$
 for everything except $a$ for which we use a learning rate of $1e^{-4}$. We
