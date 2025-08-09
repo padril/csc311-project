@@ -127,7 +127,53 @@ data; mapping to a laten space would also fix this issue.
 \blindtext
 
 \subsection{Matrix factorization}
-\blindtext
+
+\begin{enumerate}
+
+\item 
+~
+\vspace{-0.2cm}
+\begin{mcfigure}
+    \centering
+    {\footnotesize
+        \setlength{\tabcolsep}{3pt}
+        \begin{tabular}{ |c|c|c|c|c|c|c| } 
+            \hline
+            \textbf{$k$-value} & 1 & {\bf6} &  11 & 16 & 21 & 26 \\ 
+            \textbf{Val. Accuracy} & 0.642 & {\bf0.657} &  0.656
+                              & 0.655 & 0.656 & 0.657 \\ 
+            \textbf{Test Accuracy} & 0.647 & {\bf0.662} &  0.662
+                              & 0.662 & 0.662 & 0.662 \\                  
+            \hline
+        \end{tabular}
+    }
+    \captionof{figure}{Accuracies of SVD}
+    \label{fig:userclustering}
+\end{mcfigure}
+
+\item 
+
+Currently, SVD is filling in the missing entries of the matrix with the average of the present values. This flattens the data and reduces the variance, with the flattening getting worse the sparser the matrix is before being filled in. This can lead to overfitting and reduced accuracy.
+
+\item 
+
+See code.
+
+\item 
+
+See code.
+
+\item 
+
+The chosen hyperparameters are 0.01 for the learning rate, and 4500 iterations. The final chosen validation accuracy is 0.592, and the loss evolved as follows: 
+\begin{figure}[H]
+    \centering
+    \includesvg[width=\linewidth]{a3ie}
+    \captionof{figure}{Training and Validation loss of ALS}
+    \label{fig:questionclustering}
+\end{figure}
+
+\end{enumerate}
 
 \subsection{Ensemble}
 \blindtext
@@ -321,5 +367,22 @@ chance, which leads to the training curve in \ref{fig:withdropout}. This fixed
 the problem, and by doing early stopping based on the valid score we got a
 final train accuracy of 72.0\%, valid accuracy of 66.9\%, and test accuracy of
 66.6\%.
+
+\subsection{Comparison}
+
+\subsection{Limitations}
+
+One situation in which we would expect our modification to perform poorly is in situations where the data is particularly sparse, that is to say, where most of the data is missing. 
+
+Whenever we measure the magnitude in a feature, the empty spots in the matrix might skew what we expect to see from the student (i.e. they only have one question in that subject that they got wrong, whereas if all the data was there it’d be mostly correct).
+
+One way that we could potentially address this is an extension to extrapolate from more complete features, questions whose subjects are relatively similar. This way, we can be relatively confident in the filled missing data without resorting to filling with zeroes, averages, or duplicates.
+
+\section{}
+
+\subsection{Contributions}
+Leo: \\
+Longyue: Part A Q3, Part B Q3 \& 4\\
+Gursewak: Part A Q2 \&4, Part B Q3\\
 
 \end{document}
