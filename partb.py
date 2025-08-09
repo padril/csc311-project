@@ -87,6 +87,7 @@ def compute_aptitude(H, L):
 
 def sigmoid(x):
     """Apply sigmoid function."""
+    # This code came from stackexchange somewhere, but its pretty trivial
     return np.where(
             x >= 0, # condition
             1 / (1 + np.exp(-x)), # For positive values
@@ -107,6 +108,8 @@ def train_irt(H, S, L, val):
     # perform gradient descent on Wth and Wb
 
     # Adam state
+    # theres probably a better way to do this with params and dictionaries,
+    # but i'll hardcode it instead
     adam_m_Wth = 0
     adam_m_Wb = 0
     adam_m_a = 0
@@ -135,6 +138,7 @@ def train_irt(H, S, L, val):
         dropout = (np.random.rand(*beta.shape) > p) / (1-p)
         beta = beta * dropout
 
+        # lots of eps=1e-12 stuff to prevent overflows and stuff
         abstheta = np.linalg.norm(theta, axis=1, keepdims=True) + 1e-12
         absbeta = np.linalg.norm(beta, axis=1, keepdims=True) + 1e-12
         cs = (theta @ beta.T) / (abstheta @ absbeta.T)
@@ -170,6 +174,7 @@ def train_irt(H, S, L, val):
 
         adam_t += 1
 
+        # this stuff helps prevent overfitting, and getting the model started
         lr = LR
         lr_a = LR_a
         lr_b = LR
@@ -178,6 +183,7 @@ def train_irt(H, S, L, val):
         elif i >= 0.7 * ITS:
             lr *= 0.5
 
+        # step adam! why write a function when you can copy paste
         adam_m_Wth = b1 * adam_m_Wth + (1 - b1) * grad_Wth
         adam_v_Wth = b2 * adam_v_Wth + (1 - b2) * (grad_Wth ** 2)
         m_hat = adam_m_Wth / (1 - b1 ** adam_t)
